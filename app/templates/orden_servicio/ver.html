@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Detalle de Orden de Servicio - #{{ orden.id_orden_servicio }}{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 900px; margin: 0 auto;">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">📄 Detalle de la Orden</h1>
+            <p style="color: #718096; margin-top: 0.5rem;">Información completa de la orden de servicio</p>
+        </div>
+        <div class="actions">
+            <a href="{{ url_for('orden_servicio.editar_orden', id=orden.id_orden_servicio) }}" class="btn btn-primary">
+                ✏️ Editar
+            </a>
+            <a href="{{ url_for('orden_servicio.listar_ordenes') }}" class="btn btn-secondary">
+                ← Volver a la Lista
+            </a>
+        </div>
+    </div>
+    
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <h2 style="margin-bottom: 0.5rem;">Orden de Servicio #{{ orden.id_orden_servicio }}</h2>
+        {% set status = orden.nombre_estatus | lower %}
+        {% if 'finalizado' in status or 'completado' in status %}
+            {% set badge_class = 'badge-success' %}
+        {% elif 'cancelado' in status %}
+            {% set badge_class = 'badge-danger' %}
+        {% elif 'progreso' in status %}
+            {% set badge_class = 'badge-info' %}
+        {% elif 'pendiente' in status %}
+            {% set badge_class = 'badge-warning' %}
+        {% else %}
+            {% set badge_class = 'badge-secondary' %}
+        {% endif %}
+        <span class="badge {{ badge_class }}">{{ orden.nombre_estatus }}</span>
+    </div>
+    
+    <div class="detail-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+        <div class="detail-item">
+            <div class="detail-label">Cliente</div>
+            <div class="detail-value">{{ orden.nombre_cliente }} {{ orden.apellido_cliente }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Equipo</div>
+            <div class="detail-value">{{ orden.marca_equipo }} {{ orden.modelo_equipo }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Técnico Asignado</div>
+            <div class="detail-value">{{ orden.nombre_tecnico }} {{ orden.apellido_tecnico }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Servicio Solicitado</div>
+            <div class="detail-value">{{ orden.nombre_servicio }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Fecha de Creación</div>
+            <div class="detail-value">{{ orden.fecha_creacion|format_fecha('%d/%m/%Y %H:%M') if orden.fecha_creacion else 'N/A' }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Fecha de Cierre</div>
+            <div class="detail-value">{{ orden.fecha_cierre|format_fecha('%d/%m/%Y %H:%M') if orden.fecha_cierre else 'Pendiente' }}</div>
+        </div>
+    </div>
+
+    <div style="margin-top: 2rem;">
+        <div class="detail-item full-width" style="background: #f7fafc; padding: 1.5rem; border-radius: 10px;">
+            <h3 style="margin-bottom: 1rem; color: #4a5568;">Detalles del Problema y Solución</h3>
+            
+            <div class="detail-label">Descripción del Problema</div>
+            <p style="margin-bottom: 1.5rem;">{{ orden.descripcion_problema or 'No especificado' }}</p>
+            
+            <div class="detail-label">Diagnóstico del Técnico</div>
+            <p style="margin-bottom: 1.5rem;">{{ orden.diagnostico_tecnico or 'Pendiente de diagnóstico' }}</p>
+            
+            <div class="detail-label">Solución Aplicada</div>
+            <p>{{ orden.solucion_problema or 'Pendiente de solución' }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

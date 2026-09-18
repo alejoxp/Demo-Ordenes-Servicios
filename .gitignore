@@ -1,0 +1,7 @@
+# Dependencies
+venv/
+.env
+
+# Python
+__pycache__/
+*.pyc

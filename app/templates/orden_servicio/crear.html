@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}Nueva Orden de Servicio{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 900px; margin: 0 auto;">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">➕ Nueva Orden de Servicio</h1>
+            <p style="color: #718096; margin-top: 0.5rem;">Registra una nueva orden en el sistema</p>
+        </div>
+    </div>
+    
+    <form method="POST">
+        <div class="form-grid-3-cols">
+            <!-- Columna 1 -->
+            <div class="form-group">
+                <label for="id_cliente">Cliente *</label>
+                <select id="id_cliente" name="id_cliente" class="form-control" required>
+                    <option value="">-- Seleccionar Cliente --</option>
+                    {% for cliente in clientes %}
+                    <option value="{{ cliente.id_cliente }}">{{ cliente.nombre }} {{ cliente.apellido }} ({{ cliente.cedula }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="id_equipo">Equipo *</label>
+                <select id="id_equipo" name="id_equipo" class="form-control" required disabled>
+                    <option value="">-- Primero selecciona un cliente --</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="id_servicio">Servicio Requerido *</label>
+                <select id="id_servicio" name="id_servicio" class="form-control" required>
+                    <option value="">-- Seleccionar Servicio --</option>
+                    {% for servicio in servicios %}
+                    <option value="{{ servicio.id_servicio }}">{{ servicio.nombre_servicio }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Columna 2 -->
+            <div class="form-group">
+                <label for="id_tecnico">Técnico Asignado *</label>
+                <select id="id_tecnico" name="id_tecnico" class="form-control" required>
+                    <option value="">-- Seleccionar Técnico --</option>
+                    {% for tecnico in tecnicos %}
+                    <option value="{{ tecnico.id_tecnico }}">{{ tecnico.nombre }} {{ tecnico.apellido }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="id_tipo_orden">Tipo de Orden</label>
+                <select id="id_tipo_orden" name="id_tipo_orden" class="form-control">
+                    {% for tipo in tipos_orden %}
+                    <option value="{{ tipo.id_tipo_orden }}">{{ tipo.nombre_tipo }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="id_prioridad">Prioridad</label>
+                <select id="id_prioridad" name="id_prioridad" class="form-control">
+                    {% for prioridad in prioridades %}
+                    <option value="{{ prioridad.id_prioridad }}">{{ prioridad.nombre_prioridad }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+             <!-- Columna 3 -->
+            <div class="form-group">
+                <label for="id_estatus">Estatus Inicial</label>
+                <select id="id_estatus" name="id_estatus" class="form-control">
+                    {% for estatus in estatus_orden %}
+                     {% if 'creada' in estatus.nombre_estatus.lower() or 'abierta' in estatus.nombre_estatus.lower() %}
+                    <option value="{{ estatus.id_estatus }}" selected>{{ estatus.nombre_estatus }}</option>
+                     {% else %}
+                    <option value="{{ estatus.id_estatus }}">{{ estatus.nombre_estatus }}</option>
+                     {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group full-width" style="margin-top: 1.5rem;">
+            <label for="descripcion_problema">Descripción del Problema *</label>
+            <textarea id="descripcion_problema" name="descripcion_problema" class="form-control" required 
+                      placeholder="Detalla la falla o el requerimiento del cliente..."></textarea>
+        </div>
+        
+        <div style="display: flex; gap: 1rem; margin-top: 2rem; justify-content: flex-end;">
+            <a href="{{ url_for('orden_servicio.listar_ordenes') }}" class="btn btn-secondary">
+                Cancelar
+            </a>
+            <button type="submit" class="btn btn-primary">
+                💾 Crear Orden
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const clienteSelect = document.getElementById('id_cliente');
+    const equipoSelect = document.getElementById('id_equipo');
+
+    clienteSelect.addEventListener('change', function() {
+        const clienteId = this.value;
+        equipoSelect.innerHTML = '<option value="">Cargando equipos...</option>';
+        equipoSelect.disabled = true;
+
+        if (!clienteId) {
+            equipoSelect.innerHTML = '<option value="">-- Primero selecciona un cliente --</option>';
+            return;
+        }
+
+        fetch(`/equipos/cliente/${clienteId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('La respuesta de la red no fue correcta');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.exito && data.data.length > 0) {
+                    equipoSelect.innerHTML = '<option value="">-- Seleccionar Equipo --</option>';
+                    data.data.forEach(equipo => {
+                        const optionText = `${equipo.marca || ''} ${equipo.modelo || ''} (Serial: ${equipo.numero_serie || 'N/A'})`.trim();
+                        const option = new Option(optionText, equipo.id_equipo);
+                        equipoSelect.appendChild(option);
+                    });
+                    equipoSelect.disabled = false;
+                } else {
+                    equipoSelect.innerHTML = '<option value="">-- No hay equipos para este cliente --</option>';
+                }
+            })
+            .catch(error => {
+                console.error('Error al cargar equipos:', error);
+                equipoSelect.innerHTML = '<option value="">-- Error al cargar equipos --</option>';
+            });
+    });
+});
+</script>
+{% endblock %}

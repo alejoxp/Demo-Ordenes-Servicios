@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Órdenes de Servicio{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">🛠️ Órdenes de Servicio</h1>
+            <p style="color: #718096; margin-top: 0.5rem;">Gestiona las órdenes de servicio del sistema</p>
+        </div>
+        <a href="{{ url_for('orden_servicio.crear_orden') }}" class="btn btn-primary">
+            <span>+</span> Nueva Orden
+        </a>
+    </div>
+
+    <div class="search-box">
+        <input type="text" id="busqueda" placeholder="Buscar por cliente, equipo, técnico..." 
+               class="form-control search-input">
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Cliente</th>
+                    <th>Equipo</th>
+                    <th>Técnico Asignado</th>
+                    <th>Servicio Solicitado</th>
+                    <th>Fecha Creación</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for orden in ordenes %}
+                <tr>
+                    <td><strong>#{{ orden.id_orden_servicio }}</strong></td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                                        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+                                        color: white; font-weight: 600;">
+                                {{ orden.nombre_cliente[0] if orden.nombre_cliente else 'C' }}{{ orden.apellido_cliente[0] if orden.apellido_cliente else '' }}
+                            </div>
+                            <div>
+                                <div style="font-weight: 600;">{{ orden.nombre_cliente }} {{ orden.apellido_cliente }}</div>
+                                {% if orden.email_cliente %}
+                                <div style="font-size: 0.875rem; color: #718096;">{{ orden.email_cliente }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-weight: 600;">{{ orden.marca_equipo }}</div>
+                        <div style="font-size: 0.875rem; color: #718096;">{{ orden.modelo_equipo }}</div>
+                    </td>
+                    <td>
+                        <div style="font-weight: 600;">{{ orden.nombre_tecnico }} {{ orden.apellido_tecnico }}</div>
+                        <div style="font-size: 0.875rem; color: #718096;">{{ orden.especialidad_tecnico }}</div>
+                    </td>
+                    <td>{{ orden.nombre_servicio }}</td>
+                    <td>{{ orden.fecha_creacion|format_fecha('%d/%m/%Y') if orden.fecha_creacion else 'N/A' }}</td>
+                    <td>
+                        {% set status = orden.nombre_estatus | lower %}
+                        {% if 'finalizado' in status or 'completado' in status %}
+                            {% set badge_class = 'badge-success' %}
+                        {% elif 'cancelado' in status %}
+                            {% set badge_class = 'badge-danger' %}
+                        {% elif 'progreso' in status %}
+                            {% set badge_class = 'badge-info' %}
+                        {% elif 'pendiente' in status %}
+                            {% set badge_class = 'badge-warning' %}
+                        {% else %}
+                            {% set badge_class = 'badge-secondary' %}
+                        {% endif %}
+                        <span class="badge {{ badge_class }}">{{ orden.nombre_estatus }}</span>
+                    </td>
+                    <td>
+                        <div class="actions">
+                            <a href="{{ url_for('orden_servicio.ver_orden', id=orden.id_orden_servicio) }}" class="btn btn-success btn-sm">👁️ Ver</a>
+                            <a href="{{ url_for('orden_servicio.editar_orden', id=orden.id_orden_servicio) }}" class="btn btn-primary btn-sm">✏️ Editar</a>
+                            <form action="{{ url_for('orden_servicio.eliminar_orden', id=orden.id_orden_servicio) }}" 
+                                  method="POST" style="display: inline;"
+                                  onsubmit="return confirm('¿Estás seguro de eliminar la orden #{{ orden.id_orden_servicio }}?');">
+                                <button type="submit" class="btn btn-danger btn-sm">🗑️ Eliminar</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🛠️</div>
+                            <h3>No hay órdenes de servicio registradas</h3>
+                            <p>Comienza agregando tu primera orden al sistema</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('busqueda').addEventListener('input', function(e) {
+        const termino = e.target.value.toLowerCase();
+        const filas = document.querySelectorAll('tbody tr');
+        
+        filas.forEach(fila => {
+            if (fila.querySelector('.empty-state')) return;
+            const texto = fila.textContent.toLowerCase();
+            fila.style.display = texto.includes(termino) ? '' : 'none';
+        });
+    });
+</script>
+{% endblock %}
